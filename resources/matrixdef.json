@@ -1,6 +1,8 @@
 {
   "test": {
-    "filePath": "./resources/files/hogehoge.csv",
+    "filePaths": {
+      "test": "./resources/files/hogehoge.csv"
+    },
     "headMost": 1,
     "rightMost": 0,
     "leftMost": 0,
@@ -13,7 +15,9 @@
     }
   },
   "test2": {
-    "filePath": "./resources/files/hogehoge.csv",
+    "filePaths": {
+      "test": "./resources/files/hogehoge.csv"
+    },
     "headMost": 1,
     "rightMost": 5,
     "leftMost": 3,

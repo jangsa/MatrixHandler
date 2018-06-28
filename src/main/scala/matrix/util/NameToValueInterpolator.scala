@@ -65,7 +65,10 @@ object NameToValueInterpolator {
         case Failure(_) => throw InvalidColumnNameException("Give column name \"" + colName.parts.mkString + "\" is invalid")
       }
 
-      row(colIndex)
+      Try(row(colIndex)) match {
+        case Success(v) => v
+        case _ => ""
+      }
 
     }
 

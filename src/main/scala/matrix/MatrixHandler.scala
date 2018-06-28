@@ -1,11 +1,13 @@
 package matrix
 
-import matrix.types.MatrixTypes.{ColumnPositionDict, Matrix}
-import matrix.util.FileToVec
+import matrix.types.MatrixTypes.{Column, ColumnPositionDict, Matrix}
+import matrix.util.FileToMatrix
+import matrix.util.NameToValueInterpolator._
+import matrix.util.StringTo._
 
 case class MatrixHandler
 (
-  val filePath: String,
+  val filePaths: Map[String, String],
   val headMost: Int,
   val rightMost: Int,
   val leftMost: Int,
@@ -14,29 +16,83 @@ case class MatrixHandler
   implicit val columnDictionary: ColumnPositionDict
 ) {
 
-  lazy val entire: Matrix = FileToVec.squeezeVec(filePath)
+  lazy val wholeDict: Map[String, Matrix] = filePaths.mapValues(FileToMatrix.squeezeVec(_))
 
-  lazy val entireRowSize: Int = entire.size
+  lazy val entireRowSize: Map[String, Int] = wholeDict.mapValues(_.size)
 
-  lazy val footMost = entireRowSize - footerSize
+  lazy val footMost = entireRowSize.mapValues(_ - footerSize)
 
-  lazy val header: Matrix = entire.take(headMost - 1)
+  lazy val headerDict: Map[String, Matrix] = wholeDict.mapValues(_.take(headMost - 1))
 
-  lazy val footer: Matrix = entire.drop(footMost)
+  lazy val footerDict: Map[String, Matrix] =
+    wholeDict.map {
+      case _@(key, m) => (key, m.drop(footMost(key)))
+      case p => p
+    }
 
-  lazy val body: Matrix = entire.take(footMost).drop(headMost - 1)
+  lazy val bodyDict: Map[String, Matrix] =
+    wholeDict.map {
+      case _@(key, m) => (key, m.take(footMost(key)).drop(headMost - 1))
+      case p => p
+    }
 
-  lazy val table: Matrix =
-    for {
-      row <- body
-    } yield
-      if (rightMost > 0)
-        row.take(rightMost).drop(leftMost)
-      else
-        row.drop(leftMost)
+  lazy val tableDict: Map[String, Matrix] =
+    bodyDict
+      .mapValues(m =>
+        m.map(row =>
+          if (rightMost > 0)
+            row.take(rightMost).drop(leftMost)
+          else
+            row.drop(leftMost)
+        ))
 
-  lazy val tableHeader: Matrix = table.take(headerRowNum)
+  lazy val tableHeaderDict: Map[String, Matrix] = tableDict.mapValues(_.take(headerRowNum))
 
-  lazy val tableBody: Matrix = table.drop(headerRowNum)
+  lazy val tableBodyDict: Map[String, Matrix] = tableDict.mapValues(_.drop(headerRowNum))
+
+}
+
+object MatrixHandler {
+
+  implicit class Syntax(matrix: Matrix) {
+
+    def _where(cmp: (String, String) => Boolean)
+              (colValPair: Vector[(Column, String)])
+              (implicit header: Matrix, dictionary: ColumnPositionDict): Matrix =
+      matrix
+        .filter(implicit row =>
+          colValPair
+            .foldLeft(true)((acc, p) => {
+              acc && cmp(ToValue(StringContext(p._1)).col(), p._2)
+            })
+        )
+
+    def where(colValPair: Vector[(Column, String)])
+             (implicit header: Matrix, dictionary: ColumnPositionDict): Matrix = _where((a, b) => a == b)(colValPair)
+
+    def whereNot(colValPair: Vector[(Column, String)])
+                (implicit header: Matrix, dictionary: ColumnPositionDict): Matrix = _where((a, b) => a != b)(colValPair)
+
+    def sumIntAt(column: Column)
+                (implicit header: Matrix, dictionary: ColumnPositionDict): Int = {
+      matrix
+        .foldLeft(0)((acc, row) => {
+          implicit val _row = row
+
+          acc + ToValue(StringContext(column)).col().toIntWithDefault
+        })
+    }
+
+    def sumDoubleAt(column: Column)
+                   (implicit header: Matrix, dictionary: ColumnPositionDict): Double = {
+      matrix
+        .foldLeft(0d)((acc, row) => {
+          implicit val _row = row
+
+          acc + ToValue(StringContext(column)).col().toDoubleWithDefault
+        })
+    }
+
+  }
 
 }

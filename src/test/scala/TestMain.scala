@@ -1,5 +1,5 @@
 import matrix.marshalling.MatrixHandlerJsonDecoder
-import matrix.util.MatrixHandlerHelper._
+import matrix.MatrixHandler._
 import org.scalatest.FlatSpec
 
 class TestMain extends FlatSpec {
@@ -12,18 +12,18 @@ class TestMain extends FlatSpec {
 
 
   "entireRowSize" should "be correct" in {
-    assert(handler.entireRowSize == 9)
+    assert(handler.entireRowSize("test") == 9)
   }
 
   {
     import handler._
     import matrix.util.StringTo._
 
-    implicit val tableHeader = handler.tableHeader
+    implicit val tableHeader = handler.tableHeaderDict("test")
 
     "col\"ichidayo\" at 2nd line" should "be b" in {
 
-      tableBody
+      tableBodyDict("test")
         .zipWithIndex
         .foreach(p => {
           implicit val row = p._1
@@ -36,7 +36,7 @@ class TestMain extends FlatSpec {
 
     "col\"column5\" at 3rd line" should "be 5 which is String and can be evaluated as Int/Double" in {
 
-      tableBody
+      tableBodyDict("test")
         .zipWithIndex
         .foreach {
           case (row, i) if i == 1 => {
@@ -52,7 +52,7 @@ class TestMain extends FlatSpec {
 
     "col\"column5\" (that is not configured in json) at 4th line" should "be momo,nga.da,yo" in {
 
-      tableBody
+      tableBodyDict("test")
         .zipWithIndex
         .foreach {
           case (row, i) if i == 2 => {
@@ -68,7 +68,7 @@ class TestMain extends FlatSpec {
     "where syntax" should "work correctly" in {
 
       val matchedRows =
-        tableBody
+        tableBodyDict("test")
           .where(
             Vector(
               ("column5", "5")
