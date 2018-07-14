@@ -1,6 +1,6 @@
 package matrix
 
-import matrix.types.MatrixTypes.{Column, ColumnPositionDict, Matrix}
+import matrix.types.MatrixTypes.{Column, ColumnDict, Matrix}
 import matrix.util.FileToMatrix
 import matrix.util.NameToValueInterpolator._
 import matrix.util.StringTo._
@@ -13,7 +13,7 @@ case class MatrixHandler
   val leftMost: Int,
   val footerSize: Int,
   val headerRowNum: Int,
-  implicit val columnDictionary: ColumnPositionDict
+  implicit val columnDictionary: ColumnDict
 ) {
 
   lazy val wholeDict: Map[String, Matrix] = filePaths.mapValues(FileToMatrix.squeezeVec(_))
@@ -58,38 +58,38 @@ object MatrixHandler {
 
     def _where(cmp: (String, String) => Boolean)
               (colValPair: Vector[(Column, String)])
-              (implicit header: Matrix, dictionary: ColumnPositionDict): Matrix =
+              (implicit header: Matrix, dictionary: ColumnDict): Matrix =
       matrix
         .filter(implicit row =>
           colValPair
             .foldLeft(true)((acc, p) => {
-              acc && cmp(ToValue(StringContext(p._1)).col(), p._2)
+              acc && cmp(ToValue(StringContext(p._1)).colval(), p._2)
             })
         )
 
     def where(colValPair: Vector[(Column, String)])
-             (implicit header: Matrix, dictionary: ColumnPositionDict): Matrix = _where((a, b) => a == b)(colValPair)
+             (implicit header: Matrix, dictionary: ColumnDict): Matrix = _where((a, b) => a == b)(colValPair)
 
     def whereNot(colValPair: Vector[(Column, String)])
-                (implicit header: Matrix, dictionary: ColumnPositionDict): Matrix = _where((a, b) => a != b)(colValPair)
+                (implicit header: Matrix, dictionary: ColumnDict): Matrix = _where((a, b) => a != b)(colValPair)
 
     def sumIntAt(column: Column)
-                (implicit header: Matrix, dictionary: ColumnPositionDict): Int = {
+                (implicit header: Matrix, dictionary: ColumnDict): Int = {
       matrix
         .foldLeft(0)((acc, row) => {
           implicit val _row = row
 
-          acc + ToValue(StringContext(column)).col().toIntWithDefault
+          acc + ToValue(StringContext(column)).colval().toIntWithDefault()
         })
     }
 
     def sumDoubleAt(column: Column)
-                   (implicit header: Matrix, dictionary: ColumnPositionDict): Double = {
+                   (implicit header: Matrix, dictionary: ColumnDict): Double = {
       matrix
         .foldLeft(0d)((acc, row) => {
           implicit val _row = row
 
-          acc + ToValue(StringContext(column)).col().toDoubleWithDefault
+          acc + ToValue(StringContext(column)).colval().toDoubleWithDefault()
         })
     }
 

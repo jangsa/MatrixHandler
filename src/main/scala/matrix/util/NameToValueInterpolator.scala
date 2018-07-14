@@ -58,19 +58,17 @@ object NameToValueInterpolator {
 
   implicit class ToValue(val colName: StringContext) extends AnyVal {
 
-    def col(args: Any*)(implicit row: Row, dictionary: ColumnPositionDict, header: Matrix): String = {
-
-      val colIndex: Int = Try(colName.parts.iterator.next()) match {
+    def colnum(args: Any*)(implicit dictionary: ColumnDict, header: Matrix): Int =
+      Try(colName.parts.iterator.next()) match {
         case Success(v) => dictionary.withDefault(toColumnIndex)(v)
         case Failure(_) => throw InvalidColumnNameException("Give column name \"" + colName.parts.mkString + "\" is invalid")
       }
 
-      Try(row(colIndex)) match {
-        case Success(v) => v
-        case _ => ""
-      }
-
-    }
+    def colval(args: Any*)(implicit row: Row, dictionary: ColumnDict, header: Matrix): String =
+        Try(row(colnum(args))) match {
+          case Success(v) => v
+          case _ => ""
+        }
 
   }
 

@@ -28,7 +28,7 @@ class TestMain extends FlatSpec {
         .foreach(p => {
           implicit val row = p._1
           if (p._2 == 0) {
-            assert(col"ichidayo" == "b")
+            assert(colval"ichidayo" == "b")
           }
         })
 
@@ -41,8 +41,8 @@ class TestMain extends FlatSpec {
         .foreach {
           case (row, i) if i == 1 => {
             implicit val _row = row
-            assert(col"column5".toIntWithDefault == 5)
-            assert(col"column5".toDoubleWithDefault == 5d)
+            assert(colval"column5".toIntWithDefault() == 5)
+            assert(colval"column5".toDoubleWithDefault() == 5d)
           }
 
           case _ => /* nothing to do */
@@ -57,7 +57,7 @@ class TestMain extends FlatSpec {
         .foreach {
           case (row, i) if i == 2 => {
             implicit val _row = row
-            assert(col"column5" == "momo,nga.da,yo")
+            assert(colval"column5" == "momo,nga.da,yo")
           }
 
           case _ => /* nothing to do */
